@@ -1,0 +1,367 @@
+from tkinter import *
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import text
+import numpy as np
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
+import matplotlib.pylab as mp
+import matplotlib.animation as ma
+
+window=Tk()
+window.geometry("1200x700+100+100")
+window.title('示波器')      
+
+
+label=Label(window,text="简易示波器",font=("华文行楷",48),fg="green",bg="pink").grid(row=16,column=5)
+
+f = mp.figure(figsize=(9, 6), facecolor='lightgray')
+
+f1 = f.add_subplot(111) 
+
+mp.title('Signal', fontsize=20)
+mp.xlabel('Time/ms', fontsize=14)  
+mp.ylabel('Signal/mV', fontsize=14)
+
+ax = mp.gca()  
+ax.set_ylim(-5, 5) 
+ax.set_xlim(0, 10)
+mp.tick_params(labelsize=10)  
+mp.grid(linestyle=':')
+
+global x_range,y_range
+x_range=1
+y_range=1
+
+def X_range(value):
+    global x_range
+    x_range=value
+    x_max=10/float(x_range)
+    ax.set_xlim(0, x_max)
+def Y_range(value):
+    global y_range
+    y_range=value
+    y_min=-5*float(y_range)
+    y_max=5*float(y_range)
+    ax.set_ylim(y_min, y_max)  
+x_scale = Scale(window, from_=1, to=100, length=200, tickinterval=50, orient='horizontal',command=X_range).grid(row=3,column=11,columnspan=3) 
+x_label = Label(window, text='TIME/DIV', width=10, height=1, font=('宋体', 14)).grid(row=4,column=11)
+y_scale = Scale(window, from_=1, to=100, length=200, tickinterval=50, orient='horizontal',command=Y_range).grid(row=5,column=11,columnspan=3) 
+y_label = Label(window, text='VOLTS/DIV', width=10, height=1, font=('宋体', 14)).grid(row=6,column=11)
+
+
+canvas = FigureCanvasTkAgg(f, master=window)
+canvas._tkcanvas.grid(row=1,column=1,rowspan=10,columnspan=10)
+
+def _quit():
+
+    window.quit()  
+    window.destroy()  
+
+
+button = Button(master=window, text="POWER", command=_quit)
+button.grid(row=11,column=1)
+
+
+global A1,A2,omega1,omega2,phi1,phi2
+A1,A2,omega1,omega2,phi1,phi2=0,0,0,0,0,0
+def ch1_window():
+
+
+    CH1 = Toplevel(window)
+    CH1.geometry('220x145+400+400')
+    CH1.title('通道1')
+
+
+    ch1_label = Label(CH1, text='V=A Sin(ωt+φ)',font=("Times New Roman",24)).grid(row=0)
+
+    ch1_A_label = Label(CH1,text='幅值A').grid(row=2,sticky=W)
+    ch1_A_doublevar = DoubleVar()
+    ch1_A = Spinbox(CH1,
+                  from_=0,          
+                  to=500,          
+                  increment=0.1,     
+                  textvariable=ch1_A_doublevar    
+                  ).grid(row=2,sticky=E)
+    
+
+
+    ch1_omega_label = Label(CH1,text='角频率ω').grid(row=4,sticky=W)
+    ch1_omega_doublevar = DoubleVar()
+    ch1_omega = Spinbox(CH1,
+                  from_=0,        
+                  to=200,          
+                  increment=0.1,     
+                  textvariable=ch1_omega_doublevar       
+                  ).grid(row=4,sticky=E)
+   
+
+
+    ch1_phi_label = Label(CH1,text='初相位φ').grid(row=6,sticky=W)
+    ch1_phi_intvar = IntVar()
+    ch1_phi = Spinbox(CH1,
+                  from_=0,         
+                  to=360,         
+                  increment=1,    
+                  textvariable=ch1_phi_intvar     
+                  ).grid(row=6,sticky=E)
+    
+
+
+    def ch1_set():
+        global A,omega,phi,var
+        var=1
+        A=ch1_A_doublevar.get()
+        omega=ch1_omega_doublevar.get()       
+        phi=ch1_phi_intvar.get()
+        CH1.destroy() 
+    def ch1_reset():
+        global A1,omega1,phi1
+        A1,omega1,phi1=0,0,0
+    btn_ch1_set = Button(CH1, text='确定', command=ch1_set).grid(row=10,sticky=E)
+    btn_ch1_reset=Button(CH1, text='复位', command=ch1_reset).grid(row=10,sticky=W)
+
+def ch2_window():
+
+    CH2 = Toplevel(window)
+    CH2.geometry('220x145+400+400')
+    CH2.title('通道2')
+
+    ch2_label = Label(CH2, text='V=A Sin(ωt+φ)',font=("Times New Roman",24)).grid(row=0)
+
+    ch2_A_label = Label(CH2,text='幅值A').grid(row=2,sticky=W)
+    ch2_A_doublevar = DoubleVar()
+    ch2_A = Spinbox(CH2,
+                  from_=0,         
+                  to=500,         
+                  increment=0.1,      
+                  textvariable=ch2_A_doublevar       
+                  ).grid(row=2,sticky=E)
+
+
+
+    ch2_omega_label = Label(CH2,text='角频率ω').grid(row=4,sticky=W)
+    ch2_omega_doublevar = DoubleVar()
+    ch2_omega = Spinbox(CH2,
+                  from_=0,         
+                  to=200,         
+                  increment=0.1,      
+                  textvariable=ch2_omega_doublevar      
+                  ).grid(row=4,sticky=E)
+
+
+
+    ch2_phi_label = Label(CH2,text='初相位φ').grid(row=6,sticky=W)
+    ch2_phi_intvar = IntVar()
+    ch2_phi = Spinbox(CH2,
+                  from_=0,          
+                  to=360,          
+                  increment=1,    
+                  textvariable=ch2_phi_intvar       
+                  ).grid(row=6,sticky=E)
+
+
+
+    def ch2_set():
+        global A,omega,phi,var
+        var=2
+        A=ch2_A_doublevar.get()
+        omega=ch2_omega_doublevar.get()
+        phi=ch2_phi_intvar.get()
+        CH2.destroy()  
+    def ch2_reset():
+        global A2,omega2,phi2
+        A2,omega2,phi2=0,0,0
+        print(A2,omega2,phi2)
+    btn_ch2_set = Button(CH2, text='确定', command=ch2_set).grid(row=10,sticky=E)
+    btn_ch2_reset=Button(CH2, text='复位', command=ch2_reset).grid(row=10,sticky=W)
+'''CH1与CH2按钮'''
+btn_CH1 = Button(window, text='CH1', command=ch1_window).grid(row=11,column=5)
+btn_CH2 = Button(window, text='CH2', command=ch2_window).grid(row=11,column=7)
+
+
+global var
+def ch1_v():
+    global var
+    var=v.get()
+def ch2_v():
+    global var
+    var=v.get()
+v=IntVar()
+CH=[('CH1',1),('CH2',2)]
+ch=Label(window,text="通道",font=("华文行楷",14)).grid(row=12,column=1)
+for lang,num in CH:
+    if(num==1):
+        ch1=Radiobutton(window,text=lang,variable=v,value=num,command=ch1_v).grid(row=12,column=5)
+    else:
+        ch2=Radiobutton(window,text=lang,variable=v,value=num,command=ch2_v).grid(row=12,column=7)
+
+
+'''滑动条A,omega,phi'''
+def ch_A(value):
+    global A
+    A=value
+
+def ch_omega(value):
+    global omega
+    omega=value
+
+def ch_phi(value):
+
+    global phi
+    phi=value
+        
+
+A_scale = Scale(window, from_=0, to=500, length=200, tickinterval=250, orient='horizontal',command=ch_A).grid(row=14,column=1,columnspan=3)  
+A_label = Label(window, text='幅值A', width=10, height=1, font=('宋体', 14)).grid(row=15,column=1)
+
+omega_scale = Scale(window, from_=0, to=200, length=200, tickinterval=100, orient='horizontal',command=ch_omega).grid(row=14,column=4,columnspan=3)
+omega_label = Label(window, text='角频率ω', width=10, height=1, font=('宋体', 14)).grid(row=15,column=5)
+
+phi_scale = Scale(window, from_=0, to=360, length=200, tickinterval=180, orient='horizontal',command=ch_phi).grid(row=14,column=7,columnspan=3) 
+phi_label = Label(window, text='初相位φ', width=10, height=1, font=('宋体', 14)).grid(row=15,column=7)
+
+def set_A_omega_phi():
+    global var,A,A1,A2,omega,omega1,omega2,phi,phi1,phi2
+    if (var==1):
+        A1,omega1,phi1=A,omega,phi        
+    else:
+        A2,omega2,phi2=A,omega,phi
+    global y_min,y_max,x_max
+    if float(A1)+float(b1)>float(A2)+float(b2) and float(b1)-float(A1)<float(b2)-float(A2):
+        y_min=float(b1)-float(A1)
+        y_max=float(A1)+float(b1)
+    elif float(A1)+float(b1)>float(A2)+float(b2) and float(b1)-float(A1)>float(b2)-float(A2):
+        y_min=float(b2)-float(A2)
+        y_max=float(A1)+float(b1)
+    elif float(A1)+float(b1)<float(A2)+float(b2) and float(b1)-float(A1)>float(b2)-float(A2):
+        y_min=float(b2)-float(A2)
+        y_max=float(A2)+float(b2)
+    else:
+        y_min=float(b1)-float(A1)
+        y_max=float(A2)+float(b2)
+    ax.set_ylim(y_min, y_max)
+
+    if float(omega1)>float(omega2) and omega2!=0:       
+        x_max=10/float(omega2)
+    else:
+        x_max=10/float(omega1)
+    ax.set_xlim(0, x_max)
+
+btn_auto = Button(window, text='Auto', command=set_A_omega_phi).grid(column=11,row=1)
+
+
+
+
+global b1,b2
+b1,b2=0,0
+def ch1_b(value):
+    global b1
+    b1=value
+def ch2_b(value):
+    global b2
+    b2=value
+ch1_b_scale = Scale(window, from_=50, to=-50, length=100, tickinterval=50, orient='vertical',command=ch1_b).grid(row=3,column=15,rowspan=3) 
+ch2_b_scale = Scale(window, from_=50, to=-50, length=100, tickinterval=50, orient='vertical',command=ch2_b).grid(row=3,column=16,rowspan=3) 
+ch_b_label = Label(window, text='POSITION', width=10, height=1, font=('宋体', 14)).grid(row=6,column=15,columnspan=2)
+
+
+
+pl1 = mp.plot([], [], c="orangered")[0]  
+pl1.set_data([], [])  
+pl2 = mp.plot([], [], c="cornflowerblue")[0]  
+pl2.set_data([], []) 
+
+
+def generator1():
+    global t1
+    t1 = 0  
+    while True
+        V1 = float(A1)*np.sin(float(omega1) * t1+(float(phi1)/180)*np.pi) +float(b1)
+        yield t1, V1 
+        t1 += 0.05
+
+
+
+
+def generator2():
+    global t2
+    t2 = 0
+    while True:
+        V2 = float(A2)*np.sin(float(omega2) * t2+(float(phi2)/180)*np.pi) +float(b2)
+        yield t2, V2 
+        t2 += 0.05
+
+
+global flag
+flag=1
+
+def ch_run_pause():
+    global flag
+    flag= -flag
+btn_run_pause = Button(window, text='Run/Pause', command=ch_run_pause).grid(column=13,row=1)
+
+def update1(data):
+    t1, V1 = data
+    x1, y1 = pl1.get_data()
+    x1.append(t)
+    y1.append(V1)
+    if (flag==1):
+        x1_min, x1_max = ax.get_xlim()
+        if t1 >= x1_max:
+            ax.set_xlim(t1 - (x1_max - x1_min), t1)
+        pl1.set_data(x1, y1)
+    else:
+        return 0
+def update2(data):
+    t2, V2 = data 
+    x2, y2 = pl2.get_data() 
+    x2.append(t2)
+    y2.append(V2)
+    if(flag==1):
+        x2_min, x2_max = ax.get_xlim()
+        if t2 >= x2_max:
+            ax.set_xlim(t2 - (x2_max - x2_min), t2)
+        pl2.set_data(x2, y2)
+    else:
+        return 0
+
+
+anim1 = ma.FuncAnimation(mp.gcf(), update1, generator1, interval=5)
+anim2 = ma.FuncAnimation(mp.gcf(), update2, generator2, interval=5)
+
+global flag2
+flag2=-1
+def ch1ch2():
+    global flag2
+    flag2 = -flag2
+
+pl3 = mp.plot([], [], c="black")[0]  
+pl3.set_data([], []) 
+
+
+def generator3():
+    global t1,t2
+    t3=t1
+    while True:
+        V3 = float(A1)*np.sin(float(omega1) * t1+(float(phi1)/180)*np.pi)+ float(A2)*np.sin(float(omega2) * t2+(float(phi2)/180)*np.pi)+float(b1)+float(b2)
+        yield t3, V3 
+        t3 += 0.05
+def update3(data):
+    t3, V3 = data  
+    x3, y3 = pl3.get_data()
+    x3.append(t3)
+    y3.append(V3)
+    if (flag==1):
+        x3_min, x3_max = ax.get_xlim()
+        if t3 >= x3_max:
+            ax.set_xlim(t3 - (x3_max - x3_min), t3)
+        if flag2==1:
+            pl3.set_data(x3, y3)
+    else:
+        return 0
+
+anim3 = ma.FuncAnimation(mp.gcf(), update3, generator3, interval=5)
+btn_wave = Button(window, text='合成', command=ch1ch2).grid(column=15,row=1)
+plt.legend((pl1,pl2,pl3),['CH1','CH2','Synthesis'],loc="upper right")
+
+
+window.mainloop()
