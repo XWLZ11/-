@@ -342,7 +342,7 @@ def generator3():
     global t1,t2
     t3=t1
     while True:
-        V3 = float(A1)*np.sin(float(omega1) * t1+(float(phi1)/180)*np.pi)+ float(A2)*np.sin(float(omega2) * t2+(float(phi2)/180)*np.pi)+float(b1)+float(b2)
+        V3 = float(A1)*np.sin(float(omega1) * t1+(float(phi1)/180)*np.pi)+ float(A2)*np.sin(float(omega2) * t2+(float(phi2)/180)*np.pi)
         yield t3, V3 
         t3 += 0.05
 def update3(data):
